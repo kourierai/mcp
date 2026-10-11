@@ -1,8 +1,10 @@
 # Kourier MCP Server
 
+[![Kourier MCP connector – tool definition quality and endpoint health on Glama](https://glama.ai/mcp/connectors/sh.kourier/info/badges/score.svg)](https://glama.ai/mcp/connectors/sh.kourier/info)
+
 Remote [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for [Kourier](https://kourier.sh) — **flat-rate hosted AI inference for coding agents**.
 
-Use the MCP server to discover plans, check model limits, get API-key instructions, and configure your coding client. Kourier serves DeepSeek V4.1 Flash through OpenAI-compatible and Anthropic-compatible inference APIs, with no per-token billing or request-volume quotas. Plans differ by concurrency.
+Use the MCP server to discover plans, check model limits, configure your coding client, and start human-approved subscription onboarding. Kourier serves DeepSeek V4.1 Flash through OpenAI-compatible and Anthropic-compatible inference APIs, with no per-token billing or request-volume quotas. Plans differ by concurrency.
 
 ```text
 https://kourier.sh/mcp
@@ -12,7 +14,7 @@ https://kourier.sh/mcp
 
 > MCP provides service information and setup instructions, not model inference. Inference uses a subscription API key at `https://api.kourier.sh/v1` (OpenAI-compatible) or `https://api.kourier.sh/anthropic` (Anthropic-compatible).
 
-This repository documents the hosted service; there is no local server to install or run. The live MCP server is currently read-only: it does not purchase subscriptions, issue keys, or manage accounts directly.
+This repository documents the hosted service; there is no local server to install or run. The live MCP server provides four read-only information tools and three onboarding tools. Recurring billing and agent access require explicit human approval in the browser before a dedicated inference key can be issued.
 
 ## Quick start
 
@@ -44,7 +46,7 @@ Adding this MCP server does not change the model powering your coding client. Us
 
 ## Tools
 
-All currently hosted tools are read-only and require no authentication.
+Connecting to MCP and using the information tools requires no authentication. Onboarding status and completion require the private `onboarding_token` returned by `create_checkout_link`; keep it out of logs, public messages, and repositories.
 
 | Tool | Arguments | What it does |
 | --- | --- | --- |
@@ -52,6 +54,9 @@ All currently hosted tools are read-only and require no authentication.
 | `get_models` | None | Returns the served model's exact API identifier and context/output limits. |
 | `get_api_key_instructions` | None | Explains dashboard signup, agent sign-in, and OAuth with PKCE. Does not return an API key itself. |
 | `get_setup_instructions` | Optional `harness` | Returns configuration guidance for `oh-my-pi`, `claude-code`, `codex`, or `openai-compatible`. Omit the argument for generic OpenAI-compatible settings. |
+| `create_checkout_link` | `plan`, `client_name`; optional `harness` | Starts verified sign-in, recurring Starter/Pro purchase, and explicit agent-access approval. Returns a browser link and approval code; creating the link does not itself charge or issue a key. |
+| `get_onboarding_status` | Private `onboarding_token` | Checks approval and entitlement status. Poll every five seconds; complete only when ready, and stop on issued, denied, or expired. |
+| `complete_onboarding` | Private `onboarding_token` | Exchanges ready onboarding for a dedicated revocable inference key once. Save it securely; never retry after issuance or ambiguous delivery—check status instead. |
 
 For example, call `get_setup_instructions` with:
 
