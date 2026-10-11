@@ -1,6 +1,7 @@
 # Kourier MCP Server
 
 [![Kourier MCP connector – tool definition quality and endpoint health on Glama](https://glama.ai/mcp/connectors/sh.kourier/info/badges/score.svg)](https://glama.ai/mcp/connectors/sh.kourier/info)
+[![smithery badge](https://smithery.ai/badge/kourier/info)](https://smithery.ai/servers/kourier/info)
 
 Remote [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for [Kourier](https://kourier.sh) — **flat-rate hosted AI inference for coding agents**.
 
