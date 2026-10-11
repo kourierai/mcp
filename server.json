@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "sh.kourier/info",
+  "title": "Kourier",
+  "description": "Discover flat-rate DeepSeek plans, model limits, API-key instructions, and coding-client setup.",
+  "version": "1.0.0",
+  "websiteUrl": "https://kourier.sh",
+  "repository": {
+    "url": "https://github.com/kourierai/mcp",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://kourier.sh/mcp"
+    }
+  ]
+}

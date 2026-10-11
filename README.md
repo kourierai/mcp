@@ -151,6 +151,8 @@ The endpoint does not offer a persistent SSE stream or MCP sessions. `GET` and `
 
 ## Links
 
+The hosted service is published in the [official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers/sh.kourier%2Finfo/versions/latest) as **`sh.kourier/info`**. The repository includes `server.json` for registry metadata, `glama.json` for maintainer verification, and `lhm.plugin.json` for LobeHub publication. Directory account verification and review are separate from registry publication.
+
 - **Website:** [kourier.sh](https://kourier.sh)
 - **Pricing:** [kourier.sh/pricing](https://kourier.sh/pricing)
 - **Dashboard:** [app.kourier.sh](https://app.kourier.sh)

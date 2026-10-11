@@ -1,0 +1,12 @@
+{
+  "identifier": "kourierai-mcp",
+  "name": "Kourier",
+  "version": "1.0.0",
+  "author": "Kourier AI",
+  "authorUrl": "https://github.com/kourierai",
+  "category": "developer",
+  "cloudEndpoint": "https://kourier.sh/mcp",
+  "description": "Discover flat-rate DeepSeek inference plans, model limits, API-key instructions, and setup for coding clients. Public, read-only MCP tools; inference is served separately with a subscription API key.",
+  "homepage": "https://kourier.sh",
+  "tags": ["inference", "deepseek", "coding-agents", "developer-tools"]
+}
