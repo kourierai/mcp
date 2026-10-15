@@ -5,17 +5,17 @@
 
 Remote [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for [Kourier](https://kourier.sh) — **flat-rate hosted AI inference for coding agents**.
 
-Use the MCP server to discover plans, check model limits, configure your coding client, and start human-approved subscription onboarding. Kourier serves DeepSeek V4.1 Flash through OpenAI-compatible and Anthropic-compatible inference APIs, with no per-token billing or request-volume quotas. Plans differ by concurrency.
+Use the MCP server to discover plans, check model limits, configure your coding client, start human-approved subscription onboarding, and submit account-attributed feedback or error reports. Kourier serves DeepSeek V4.1 Flash through OpenAI-compatible and Anthropic-compatible inference APIs, with no per-token billing or request-volume quotas. Plans differ by concurrency.
 
 ```text
 https://kourier.sh/mcp
 ```
 
-**Transport:** Streamable HTTP, stateless, JSON responses. **Authentication:** none required for the public MCP tools.
+**Transport:** Streamable HTTP, stateless, JSON responses. **Authentication:** none required for information or onboarding; `submit_feedback` requires a Kourier API key in the connection's `Authorization: Bearer` header.
 
 > MCP provides service information and setup instructions, not model inference. Inference uses a subscription API key at `https://api.kourier.sh/v1` (OpenAI-compatible) or `https://api.kourier.sh/anthropic` (Anthropic-compatible).
 
-This repository documents the hosted service; there is no local server to install or run. The live MCP server provides four read-only information tools and three onboarding tools. Recurring billing and agent access require explicit human approval in the browser before a dedicated inference key can be issued.
+This repository documents the hosted service; there is no local server to install or run. The live MCP server provides eight tools: four read-only information tools, three onboarding tools, and one authenticated feedback tool. Recurring billing and agent access require explicit human approval in the browser before a dedicated inference key can be issued.
 
 ## Quick start
 
@@ -47,7 +47,7 @@ Adding this MCP server does not change the model powering your coding client. Us
 
 ## Tools
 
-Connecting to MCP and using the information tools requires no authentication. Onboarding status and completion require the private `onboarding_token` returned by `create_checkout_link`; keep it out of logs, public messages, and repositories.
+Connecting to MCP and using the information or onboarding tools requires no connection credentials. Onboarding status and completion require the private `onboarding_token` returned by `create_checkout_link`. Only `submit_feedback` requires an API-key bearer header. Keep tokens and keys out of logs, public messages, report content, and repositories.
 
 | Tool | Arguments | What it does |
 | --- | --- | --- |
@@ -58,6 +58,7 @@ Connecting to MCP and using the information tools requires no authentication. On
 | `create_checkout_link` | `plan`, `client_name`; optional `harness` | Starts verified sign-in, recurring Starter/Pro purchase, and explicit agent-access approval. Returns a browser link and approval code; creating the link does not itself charge or issue a key. |
 | `get_onboarding_status` | Private `onboarding_token` | Checks approval and entitlement status. Poll every five seconds; complete only when ready, and stop on issued, denied, or expired. |
 | `complete_onboarding` | Private `onboarding_token` | Exchanges ready onboarding for a dedicated revocable inference key once. Save it securely; never retry after issuance or ambiguous delivery—check status instead. |
+| `submit_feedback` | `kind`, `message`; optional `request_id`, `client_name` | Saves account-attributed feedback or an error report. Requires a Kourier API key in the connection's `Authorization: Bearer` header, never in tool arguments. |
 
 For example, call `get_setup_instructions` with:
 
@@ -68,6 +69,59 @@ For example, call `get_setup_instructions` with:
 ```
 
 The server also exposes the **`kourier-setup`** Markdown resource and the **`configure_kourier`** prompt, which accepts the same optional `harness` value.
+
+## Feedback and error reports
+
+Use **`submit_feedback`** to send product feedback or report a Kourier error. Reports are attributed to the account that owns the API key.
+
+### Authentication and privacy
+
+- Configure the MCP connection with `Authorization: Bearer <your Kourier API key>`. Store the key in your client's private credential settings; never add a real key to repository configuration.
+- The key must be valid, unexpired, and not revoked, and the account must not be banned. An active inference subscription is not required to report a problem using an otherwise valid key.
+- The public information and onboarding tools remain available without this header. For clients with no custom-header support, those tools still work, but feedback requires a header-capable client.
+- Send only information the user wants to share. Exclude API keys, onboarding tokens, passwords, personal data, and private code or logs. A sanitized Kourier request ID can help investigate an error.
+
+### Arguments
+
+| Argument | Required | Value |
+| --- | --- | --- |
+| `kind` | Yes | `feedback` for product feedback, or `error` for an error report. |
+| `message` | Yes | Nonblank text, 1–8,000 characters after trimming. For errors, describe expected behavior, actual behavior, and reproduction steps without private data. |
+| `request_id` | No | A Kourier request ID associated with the error, 1–200 characters after trimming. |
+| `client_name` | No | Client or harness name and version, 1–80 characters after trimming. |
+
+NUL bytes, blank supplied strings, extra fields, and credential arguments are not accepted.
+
+### Example
+
+The following command **saves a feedback report** when run with a valid key. Replace the sample message with feedback the user has approved, and set `KOURIER_API_KEY` privately in your environment before running it:
+
+```bash
+curl https://kourier.sh/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Authorization: Bearer $KOURIER_API_KEY" \
+  --data '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "submit_feedback",
+      "arguments": {
+        "kind": "feedback",
+        "message": "Please add more coding-client setup examples to the documentation.",
+        "client_name": "curl"
+      }
+    }
+  }'
+```
+
+Successful submissions return a receipt with `id` and `created_at` in `result.structuredContent`; the same receipt is included as JSON text in `result.content`. Tool failures set `result.isError` to `true` and return `error` and `error_description`.
+
+- **`unauthorized`** — configure a valid Kourier API-key bearer header.
+- **`invalid_arguments`** — correct the submitted fields and limits above.
+- **`rate_limited`** — wait the number of seconds in `retry_after` before submitting again.
+- **`service_unavailable`** — receipt could not be confirmed. The report may already have been saved; do not blindly retry, because another submission can create a duplicate.
 
 ## Hosted inference
 
